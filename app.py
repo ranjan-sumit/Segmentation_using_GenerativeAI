@@ -80,6 +80,11 @@ import numpy as np
 import os
 from langchain_openai import OpenAI
 from langchain.prompts import PromptTemplate
+from langchain.agents.agent_types import AgentType
+from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
+from langchain_openai import ChatOpenAI
+import pandas as pd
+from langchain_openai import OpenAI
 
 # Sidebar for user inputs
 st.sidebar.title('Kinesso Auto-Campaign')
@@ -128,69 +133,94 @@ def generate_marketing_strategies(cluster_num, cluster_data, llm):
 # Main app
 st.title("Kinesso Auto-Campaign Toolkit")
 
-# Step 2: Upload CSV
-uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
-    st.write("Data Preview:")
-    st.dataframe(df.head())
 
-    # Step 3: Select columns for clustering
-    columns = st.multiselect("Select columns for clustering", options=df.columns.tolist())
+tab1, tab2 = st.tabs(["Segmentation Insight", "Kinesso LLM Q & A"])
+
+with tab1:
+    st.header("Segmentation Insight")
+
+
+    # Step 2: Upload CSV
+    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        st.write("Data Preview:")
+        st.dataframe(df.head())
     
-    if columns:
-        # Convert selected columns to a numeric format
-        X = df[columns].select_dtypes(include=[np.number])
+        # Step 3: Select columns for clustering
+        columns = st.multiselect("Select columns for clustering", options=df.columns.tolist())
         
-        # Step 4: Generate ELBO curve and Silhouette score
-        max_clusters = st.slider("Select maximum number of clusters for ELBO calculation", 1, 10)
-        if st.button("Generate ELBO Curve and Silhouette Score"):
-            elbo_values = calculate_elbo(X, max_clusters)
-            silhouette_values = []
-            for i in range(2, max_clusters + 1):
-                kmeans = KMeans(n_clusters=i)
-                kmeans.fit(X)
-                silhouette_values.append(silhouette_score(X, kmeans.labels_))
+        if columns:
+            # Convert selected columns to a numeric format
+            X = df[columns].select_dtypes(include=[np.number])
             
-            # Plot ELBO
-            fig, ax = plt.subplots(1, 2, figsize=(12, 5))
-            sns.lineplot(x=range(1, max_clusters + 1), y=elbo_values, ax=ax[0], marker='o')
-            ax[0].set_title('ELBO Curve')
-            ax[0].set_xlabel('Number of Clusters')
-            ax[0].set_ylabel('ELBO (Inertia)')
-            
-            # Plot Silhouette Score
-            sns.lineplot(x=range(2, max_clusters + 1), y=silhouette_values, ax=ax[1], marker='o', color='orange')
-            ax[1].set_title('Silhouette Score')
-            ax[1].set_xlabel('Number of Clusters')
-            ax[1].set_ylabel('Silhouette Score')
-            
-            st.pyplot(fig)
-        
-        # Step 5: Set number of clusters and run algorithm
-        n_clusters = st.number_input("Enter number of clusters", min_value=1, max_value=10, value=3)
-        if st.button("Run Clustering Algorithm"):
-            kmeans = KMeans(n_clusters=n_clusters)
-            df['Cluster'] = kmeans.fit_predict(X)  # Cluster entire dataset
-            st.success("Clustering algorithm ran successfully!")
-            
-            # Display the entire clustered dataset
-            st.write("Clustered Data:")
-            st.dataframe(df)
-
-            # Check if API key is provided before generating insights
-            if openai_api_key:
-                llm = OpenAI(temperature=0.7, openai_api_key=openai_api_key)
-                n_clusters = df['Cluster'].nunique()  # Get the number of unique clusters
+            # Step 4: Generate ELBO curve and Silhouette score
+            max_clusters = st.slider("Select maximum number of clusters for ELBO calculation", 1, 10)
+            if st.button("Generate ELBO Curve and Silhouette Score"):
+                elbo_values = calculate_elbo(X, max_clusters)
+                silhouette_values = []
+                for i in range(2, max_clusters + 1):
+                    kmeans = KMeans(n_clusters=i)
+                    kmeans.fit(X)
+                    silhouette_values.append(silhouette_score(X, kmeans.labels_))
                 
-                # Collect and display marketing strategies for each cluster
-                for i in range(n_clusters):
-                    cluster_data = df[df['Cluster'] == i]
-                    if cluster_data.empty:
-                        st.write(f"No data available for Cluster {i}.")
-                    else:
-                        strategies = generate_marketing_strategies(i, cluster_data, llm)
-                        st.write(f"\n**Marketing Strategies for Cluster {i}:**")
-                        st.write(strategies)
-            else:
-                st.warning("Please enter your OpenAI API Key to generate marketing strategies.")
+                # Plot ELBO
+                fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+                sns.lineplot(x=range(1, max_clusters + 1), y=elbo_values, ax=ax[0], marker='o')
+                ax[0].set_title('ELBO Curve')
+                ax[0].set_xlabel('Number of Clusters')
+                ax[0].set_ylabel('ELBO (Inertia)')
+                
+                # Plot Silhouette Score
+                sns.lineplot(x=range(2, max_clusters + 1), y=silhouette_values, ax=ax[1], marker='o', color='orange')
+                ax[1].set_title('Silhouette Score')
+                ax[1].set_xlabel('Number of Clusters')
+                ax[1].set_ylabel('Silhouette Score')
+                
+                st.pyplot(fig)
+            
+            # Step 5: Set number of clusters and run algorithm
+            n_clusters = st.number_input("Enter number of clusters", min_value=1, max_value=10, value=3)
+            if st.button("Run Clustering Algorithm"):
+                kmeans = KMeans(n_clusters=n_clusters)
+                df['Cluster'] = kmeans.fit_predict(X)  # Cluster entire dataset
+                st.success("Clustering algorithm ran successfully!")
+                
+                # Display the entire clustered dataset
+                st.write("Clustered Data:")
+                st.dataframe(df)
+    
+                # Check if API key is provided before generating insights
+                if openai_api_key:
+                    llm = OpenAI(temperature=0.7, openai_api_key=openai_api_key)
+                    n_clusters = df['Cluster'].nunique()  # Get the number of unique clusters
+                    
+                    # Collect and display marketing strategies for each cluster
+                    for i in range(n_clusters):
+                        cluster_data = df[df['Cluster'] == i]
+                        if cluster_data.empty:
+                            st.write(f"No data available for Cluster {i}.")
+                        else:
+                            strategies = generate_marketing_strategies(i, cluster_data, llm)
+                            st.write(f"\n**Marketing Strategies for Cluster {i}:**")
+                            st.write(strategies)
+                else:
+                    st.warning("Please enter your OpenAI API Key to generate marketing strategies.")
+
+with tab2:
+    st.header("Kinesso LLM Q & A")
+    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+    if uploaded_file is not None:
+        df = pd.read_csv(uploaded_file)
+        st.write("Data Preview:")
+        st.dataframe(df.head())
+        agent = create_pandas_dataframe_agent(OpenAI(temperature=0), df, verbose=True,allow_dangerous_code=True)
+        agent = create_pandas_dataframe_agent(
+        ChatOpenAI(temperature=0, model="gpt-4o"),
+        df,
+        verbose=False,
+        agent_type=AgentType.OPENAI_FUNCTIONS,allow_dangerous_code=True
+    )
+        
+
+    
