@@ -4,4 +4,6 @@ seaborn
 langchain
 python-dotenv
 openai
-
+langchain-community
+langchain-core
+langchain-openai
