@@ -79,7 +79,14 @@ from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from langchain.llms import OpenAI
+from langchain_openai import OpenAI
+from langchain.prompts import PromptTemplate
+from dotenv import load_dotenv
+import os
+
+# Load environment variables for OpenAI API key
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
 
 # Function to calculate ELBO (for demonstration, using KMeans inertia as a proxy)
 def calculate_elbo(X, max_clusters):
@@ -90,16 +97,44 @@ def calculate_elbo(X, max_clusters):
         elbow.append(kmeans.inertia_)
     return elbow
 
-# Function to generate insights using LLM
-def generate_insights(cluster_data, cluster_num, llm):
-    prompt = f"""
-    Based on the clustered customer data for Cluster {cluster_num}, provide insights and recommendations on how to engage these customers effectively. The data is as follows:
-    {cluster_data.describe(include='all').to_string(index=False)}
+# Function to predict campaign success
+def predict_campaign_success(customer_data, llm):
+    # Feature Engineering
+    customer_data['MntTotal'] = (
+        customer_data['MntWines'] + 
+        customer_data['MntFruits'] + 
+        customer_data['MntMeatProducts'] + 
+        customer_data['MntFishProducts'] + 
+        customer_data['MntSweetProducts'] + 
+        customer_data['MntGoldProds']
+    )
+
+    # Prepare data for predictions
+    income_desc = "high" if customer_data['Income'] > 100000 else "moderate"
+    recency_desc = "recently engaged" if customer_data['Recency'] < 30 else "less engaged"
+    total_spent_desc = f"spent a total of ${customer_data['MntTotal']} on various products."
     
-    Please suggest personalized offers, communication strategies, and any other relevant information.
+    template = """
+    Given the following customer campaign response data:
+    - Income: {income_desc}
+    - Recency: {recency_desc}
+    - Total Spent: {total_spent_desc}
+    - Accepted previous campaigns: {accepted_campaigns}
+    
+    Please suggest in 100 words about personalized offers and engagement strategies to increase the likelihood of this customer accepting future campaigns. Focus on their preferences for wine and fruits, and consider their engagement level based on recency.
     """
-    response = llm.predict(prompt)
-    return response
+    
+    prompt = PromptTemplate(template=template, input_variables=["income_desc", "recency_desc", "total_spent_desc", "accepted_campaigns"])
+    filled_prompt = prompt.format(
+        income_desc=income_desc,
+        recency_desc=recency_desc,
+        total_spent_desc=total_spent_desc,
+        accepted_campaigns=customer_data[['AcceptedCmp1', 'AcceptedCmp2', 'AcceptedCmp3', 'AcceptedCmp4', 'AcceptedCmp5']].tolist()
+    )
+
+    # Generate insights using the LLM
+    llm_prediction = llm(filled_prompt)
+    return llm_prediction
 
 # Main app
 st.title("Clustering App with Marketing Insights")
@@ -159,7 +194,7 @@ if uploaded_file is not None:
 
             # Step 5: Generate insights using LLM if API key is provided
             if openai_api_key:
-                llm = OpenAI(api_key=openai_api_key)
+                llm = OpenAI(temperature=0.7, openai_api_key=openai_api_key)
 
                 for i in range(n_clusters):
                     cluster_data = df[df['Cluster'] == i]
@@ -167,7 +202,7 @@ if uploaded_file is not None:
                         st.warning(f"No data available for Cluster {i}.")
                     else:
                         if st.button(f"Generate Insights for Cluster {i}"):
-                            insights = generate_insights(cluster_data, i, llm)
+                            insights = predict_campaign_success(cluster_data.iloc[0], llm)  # Pass the first customer in the cluster
                             st.subheader(f"Generated Insights for Cluster {i}")
                             st.text(insights)
 
