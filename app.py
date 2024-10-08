@@ -223,7 +223,7 @@ from langchain.prompts import PromptTemplate
 from langchain.agents.agent_types import AgentType
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
 from langchain_openai import ChatOpenAI
-
+st.set_page_config(layout="wide")
 # Sidebar for user inputs
 st.sidebar.title('Kinesso Auto-Campaign')
 
