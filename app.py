@@ -192,16 +192,16 @@ if uploaded_file is not None:
             st.write("Clustered Data:")
             st.dataframe(df)
 
-            # Step 5: Generate insights using LLM if API key is provided
+            # Step 5: Generate insights for each cluster
             if openai_api_key:
                 llm = OpenAI(temperature=0.7, openai_api_key=openai_api_key)
-
-                for i in range(n_clusters):
-                    cluster_data = df[df['Cluster'] == i]
-                    if cluster_data.empty:
-                        st.warning(f"No data available for Cluster {i}.")
-                    else:
-                        if st.button(f"Generate Insights for Cluster {i}"):
+                
+                if st.button("Generate Cluster Insights"):
+                    for i in range(n_clusters):
+                        cluster_data = df[df['Cluster'] == i]
+                        if cluster_data.empty:
+                            st.warning(f"No data available for Cluster {i}.")
+                        else:
                             insights = predict_campaign_success(cluster_data.iloc[0], llm)  # Pass the first customer in the cluster
                             st.subheader(f"Generated Insights for Cluster {i}")
                             st.text(insights)
