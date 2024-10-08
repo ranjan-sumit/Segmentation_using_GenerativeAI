@@ -61,13 +61,14 @@ if uploaded_file is not None:
         n_clusters = st.number_input("Enter number of clusters", min_value=1, max_value=10, value=3)
         if st.button("Run Clustering Algorithm"):
             kmeans = KMeans(n_clusters=n_clusters)
-            df['Cluster'] = kmeans.fit_predict(X)
+            df['Cluster'] = kmeans.fit_predict(X)  # Cluster entire dataset
             st.success("Clustering algorithm ran successfully!")
-            st.write("Cluster assignments:")
-            st.dataframe(df[['Cluster'] + columns].head())
+            
+            # Display the entire clustered dataset
+            st.write("Clustered Data:")
+            st.dataframe(df)
 
             # Step 5: Merge clusters with master data
-            if st.button("Merge Clusters with Master Data"):
-                st.write("Merged Data:")
-                st.dataframe(df)
+            st.write("Merged Data with Cluster Assignments:")
+            st.dataframe(df)
 
