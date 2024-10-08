@@ -68,7 +68,3 @@ if uploaded_file is not None:
             st.write("Clustered Data:")
             st.dataframe(df)
 
-            # Step 5: Merge clusters with master data
-            st.write("Merged Data with Cluster Assignments:")
-            st.dataframe(df)
-
