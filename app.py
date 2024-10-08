@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
+st.sidebar.title('Kinesso Auto-Campaign Tool')
+
 # Function to calculate ELBO (for demonstration, using KMeans inertia as a proxy)
 def calculate_elbo(X, max_clusters):
     elbow = []
