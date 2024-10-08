@@ -209,18 +209,7 @@ with tab1:
 
 with tab2:
     st.header("Kinesso LLM Q & A")
-    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-        st.write("Data Preview:")
-        st.dataframe(df.head())
-        agent = create_pandas_dataframe_agent(OpenAI(temperature=0), df, verbose=True,allow_dangerous_code=True)
-        agent = create_pandas_dataframe_agent(
-        ChatOpenAI(temperature=0, model="gpt-4o"),
-        df,
-        verbose=False,
-        agent_type=AgentType.OPENAI_FUNCTIONS,allow_dangerous_code=True
-    )
+
         
 
     
