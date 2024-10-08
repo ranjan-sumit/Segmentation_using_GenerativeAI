@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-st.sidebar.title('Kinesso Auto-Campaign Tool')
+st.sidebar.title('Kinesso Auto-Campaign')
 
 # Function to calculate ELBO (for demonstration, using KMeans inertia as a proxy)
 def calculate_elbo(X, max_clusters):
@@ -18,7 +18,7 @@ def calculate_elbo(X, max_clusters):
     return elbow
 
 # Main app
-st.title("Clustering App")
+st.title("Kinesso Auto-Campaign Toolkit")
 
 # Step 1: Upload CSV
 uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
