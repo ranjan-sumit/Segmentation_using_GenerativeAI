@@ -111,7 +111,7 @@ def generate_marketing_strategies(cluster_num, cluster_data, llm):
     - Average Income: {average_income}
     - Predominant Relationship Status: {predominant_relationship_status}
     
-    Please suggest tailored marketing strategies to engage this cluster effectively.
+    Please suggest analysis of cluster, what they buy more or how was previous campaign for them successful or not. What should be marketing strategy. Explain in brief and business language.
     """
     
     prompt = PromptTemplate(template=template, input_variables=["cluster_summary", "average_income", "predominant_relationship_status"])
