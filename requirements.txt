@@ -7,3 +7,4 @@ openai
 langchain-community
 langchain-core
 langchain-openai
+langchain_experimental
