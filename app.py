@@ -583,6 +583,8 @@ from langchain_openai import ChatOpenAI
 # Sidebar for user inputs
 st.sidebar.title('Kinesso Auto-Campaign')
 
+st.set_page_config(layout="wide")
+
 # Step 1: Input OpenAI API Key
 openai_api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
 
