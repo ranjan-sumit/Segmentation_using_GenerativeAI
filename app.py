@@ -583,7 +583,7 @@ from langchain_openai import ChatOpenAI
 st.set_page_config(layout="wide")
 # Sidebar for user inputs
 st.sidebar.title('Kinesso Auto-Campaign')
-st.sidebat.text('This Auto-GenAI solution by Kinesso to segment and generate automated insights using GenAI models')
+st.sidebar.text('This Auto-GenAI solution by Kinesso to segment and generate automated insights using GenAI models')
 
 
 
